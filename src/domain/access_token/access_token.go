@@ -24,11 +24,12 @@ func GetNewAccessToken() AccessToken {
 	}
 }
 
-func (at AccessToken) IsExpired() bool {
+func (at AccessToken) IsExpired() bool { // this function always execute the whether it is true otherwise it throws error
 	now := time.Now().UTC()
 	expirationTime := time.Unix(at.Expires, 0) // convert that seconds into datetime
 
-	return expirationTime.Before(now) // it means [ expirationTime < now  ]  if the condition is ok, it gives true ohtherwise false
+	// if you pass 0 to Expires then expirationTime is 1970-01-01 05:30:00 +0530 IST ( that means starting of that count)
+	return expirationTime.Before(now) // it means [ expirationTime < now  ]  if the condition is ok, it gives true ohtherwise it throws error
 	// Before reports whether the time  t (expirationTime) is before u (now)
 
 	// WE CAN WRITE THE ABOVE 3 LINES OF CODE IN THIS BELOW 1 LINE
