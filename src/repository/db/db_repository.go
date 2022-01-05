@@ -15,7 +15,6 @@ const (
 
 func NewRepository() DbRepository {
 	return &dbRepository{}
-
 }
 
 type DbRepository interface {
@@ -29,41 +28,30 @@ type dbRepository struct {
 
 func (r *dbRepository) GetById(id string) (*access_token.AccessToken, *errors.RestErr) {
 
-	session, err := cassandra.GetSession()
-	if err != nil {
-		return nil, errors.NewInternalServerError((err.Error()))
-	}
-	defer session.Close()
-
 	// TODO: IMPLEMENT get access token from CassandraDB
 
 	var result access_token.AccessToken
 
-	if err := session.Query(queryGetAccessToken, id).Scan(
+	if err := cassandra.GetSession().Query(queryGetAccessToken, id).Scan(
 		&result.AccessToken,
 		&result.UserId,
 		&result.ClientId,
 		&result.Expires,
 	); err != nil {
 		if err == gocql.ErrNotFound {
-			return nil, errors.NewNotFoundError(("no acces token found for the given id"))
+			return nil, errors.NewNotFoundError("no acces token found for the given id")
 		}
 
-		return nil, errors.NewInternalServerError((err.Error()))
+		return nil, errors.NewInternalServerError(err.Error())
 
 	}
 
-	return nil, errors.NewInternalServerError("database connection not implemented yet")
+	return &result, nil
 }
 
 func (r *dbRepository) Create(at access_token.AccessToken) *errors.RestErr {
-	session, err := cassandra.GetSession()
-	if err != nil {
-		return errors.NewInternalServerError((err.Error()))
-	}
-	defer session.Close()
 
-	if err := session.Query(queryCreateAccessToken,
+	if err := cassandra.GetSession().Query(queryCreateAccessToken,
 		at.AccessToken,
 		at.UserId,
 		at.ClientId,
@@ -74,13 +62,8 @@ func (r *dbRepository) Create(at access_token.AccessToken) *errors.RestErr {
 }
 
 func (r *dbRepository) UpdateExpirationTime(at access_token.AccessToken) *errors.RestErr {
-	session, err := cassandra.GetSession()
-	if err != nil {
-		return errors.NewInternalServerError((err.Error()))
-	}
-	defer session.Close()
 
-	if err := session.Query(queryUpdateExpires,
+	if err := cassandra.GetSession().Query(queryUpdateExpires,
 		at.AccessToken,
 		at.Expires).Exec(); err != nil {
 		return errors.NewInternalServerError(err.Error())
